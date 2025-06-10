@@ -31,7 +31,7 @@ function setup() {
   context.imageSmoothingEnabled = false; // Hardware-Beschleunigung
   createFragments();
   noLoop(); // Deaktiviere kontinuierliches Rendering
-  fullscreen(true) //auskommentiert für Testzwecke
+  // fullscreen(true) auskommentiert für Testzwecke
 }
 
 function createFragments() {
