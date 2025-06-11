@@ -21,23 +21,31 @@ function preload() {
     loadImage('LAYER_4-min.png'),
     null // Weißer Hintergrund
   ];
+  // Überprüfe, ob Bilder geladen wurden
+  for (let i = 0; i < images.length - 1; i++) {
+    if (!images[i] || images[i].width === 0) {
+      console.error(`Bild ${i} konnte nicht geladen werden: LAYER_${i + 1}-min.${i === 0 ? 'jpg' : 'png'}`);
+    }
+  }
 }
 
 function setup() {
-  createCanvas(1920, 1200); // Feste Größe für Lenovo M10 (1920x1200)
+  // Dynamische Canvas-Größe basierend auf Bildschirm
+  let w = window.innerWidth;
+  let h = window.innerHeight;
+  createCanvas(w, h);
   pixelDensity(1);
   noSmooth();
   let context = canvas.getContext('2d');
   context.imageSmoothingEnabled = false; // Hardware-Beschleunigung
   createFragments();
   noLoop(); // Deaktiviere kontinuierliches Rendering
-  fullscreen(true)
 }
 
 function createFragments() {
   fragments = [];
-  let fragWidth = 640; // 1920 / 3
-  let fragHeight = 400; // 1200 / 3
+  let fragWidth = width / gridSize; // Dynamische Breite basierend auf Canvas
+  let fragHeight = height / gridSize; // Dynamische Höhe basierend auf Canvas
   for (let i = 0; i < gridSize * gridSize; i++) {
     let col = i % gridSize;
     let row = floor(i / gridSize);
@@ -45,12 +53,15 @@ function createFragments() {
     let y = row * fragHeight;
     let startCombo = floor(random(combinations.length));
     for (let layer = 0; layer < 5; layer++) {
+      let img = images[layer];
+      let imgWidth = img?.width || width;
+      let imgHeight = img?.height || height;
       fragments.push({
-        img: images[layer], x, y, width: fragWidth, height: fragHeight,
-        sourceX: (col * (images[layer]?.width || 1920)) / gridSize,
-        sourceY: (row * (images[layer]?.height || 1200)) / gridSize,
-        sourceWidth: (images[layer]?.width || 1920) / gridSize,
-        sourceHeight: (images[layer]?.height || 1200) / gridSize,
+        img: img, x, y, width: fragWidth, height: fragHeight,
+        sourceX: (col * imgWidth) / gridSize,
+        sourceY: (row * imgHeight) / gridSize,
+        sourceWidth: imgWidth / gridSize,
+        sourceHeight: imgHeight / gridSize,
         visible: combinations[startCombo].includes(layer),
         state: startCombo,
         colorState: 0
@@ -75,6 +86,9 @@ function draw() {
 
 function mousePressed() {
   if (isLandscape && Date.now() - lastInteraction > 200) {
+    if (!document.fullscreenElement) {
+      fullscreen(true); // Aktiviere Fullscreen bei erster Interaktion
+    }
     handleInteraction(mouseX, mouseY);
     lastInteraction = Date.now();
     redraw(); // Zeichne nur bei Interaktion neu
@@ -86,6 +100,9 @@ function touchStarted() {
   if (isLandscape) {
     for (let touch of touches) {
       if (Date.now() - lastInteraction > 200) {
+        if (!document.fullscreenElement) {
+          fullscreen(true); // Aktiviere Fullscreen bei erster Interaktion
+        }
         handleInteraction(touch.x, touch.y);
         lastInteraction = Date.now();
         redraw(); // Zeichne nur bei Interaktion neu
@@ -96,8 +113,8 @@ function touchStarted() {
 }
 
 function handleInteraction(x, y) {
-  let col = floor(x / 640);
-  let row = floor(y / 400);
+  let col = floor(x / (width / gridSize));
+  let row = floor(y / (height / gridSize));
   let index = row * gridSize + col;
   let baseIndex = index * 5;
 
@@ -137,5 +154,8 @@ function preventDefault(e) { e.preventDefault(); }
 document.addEventListener('touchmove', preventDefault, { passive: false });
 
 function windowResized() {
+  resizeCanvas(window.innerWidth, window.innerHeight);
+  createFragments(); // Erneuere Fragmente bei Größenänderung
+}
   // Keine Anpassung nötig, da Größe fest ist
 }
