@@ -157,5 +157,3 @@ function windowResized() {
   resizeCanvas(window.innerWidth, window.innerHeight);
   createFragments(); // Erneuere Fragmente bei Größenänderung
 }
-  // Keine Anpassung nötig, da Größe fest ist
-}
